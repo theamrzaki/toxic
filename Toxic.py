@@ -11,55 +11,47 @@ import pickle
 import timeit  # to measure time of training
 
 #--------------train------------------------------------#
+
+train_count      = 1000
+validation_count = 100
+
+
 def train():
     start = timeit.default_timer()
-    df = pd.read_csv('train/train.csv',delimiter=',',header=None)
+    df = pd.read_csv('train.csv',delimiter=',',header=None)
 
     print ("start training ")
  
+    train, test = train_test_split(df, test_size=0.2)
 
-    X_train_raw  =    df[2]
-    y_train      =    df[3]
+    X_train_raw          =    train[1]
 
-
-    X_train_raw_new = []
-    y_train_new = []
-
-    j=0
-    for a in X_train_raw :
-        #if len(a.split(" ")) < 2:
-        #    filter=56
-        #else:
-        X_train_raw_new.append(  X_train_raw[j])
-        y_train_new.append(  y_train[j])
-
-        j+=1
-
-
+    y_toxic               =    train[2]
+    #y_severe_toxic       =    train[3]
+    #y_obscene            =    train[4]
+    #y_threat             =    train[5]
+    #y_insult             =    train[6]
+    #y_identity_hate      =    train[7]
 
 
     vectorizer = TfidfVectorizer()
-    X_train = vectorizer.fit_transform(X_train_raw_new)
-    #classifier = LogisticRegression(solver ='lbfgs')
-    #classifier.fit(X_train, y_train_new)
+    X_train = vectorizer.fit_transform(X_train_raw)
 
-    # Create a random forest Classifier. By convention, clf means 'Classifier'
-    #classifier = RandomForestClassifier(n_jobs=2, random_state=0)
-    
-    # Train the Classifier to take the training features and learn how they relate
-    # to the training y (the species)
-    #classifier.fit(X_train, y_train_new)
+    #classifier_toxic = LogisticRegression(solver ='lbfgs')
+    #classifier_toxic.fit(X_train, y_toxic)
 
-    classifier = OneVsOneClassifier(LinearSVC())
-    classifier.fit(X_train, y_train_new)
+    classifier_toxic = OneVsOneClassifier(LinearSVC())
+    classifier_toxic.fit(X_train, y_toxic)
 
     f = open("logistic_complain_vectorizer.pickle", 'wb')
     pickle.dump(vectorizer, f)
     f.close()
 
+
     f = open("logistic_complain_classfier.pickle", 'wb')
-    pickle.dump(classifier, f)
+    pickle.dump(classifier_toxic, f)
     f.close()
+
 
     stop = timeit.default_timer()
 
@@ -67,21 +59,9 @@ def train():
     print stop - start
 
 
-
-
 #-------------------run----------------------------#
 
 def validation():
-    #f = open("logistic_vectorizer.pickle", 'rb')
-    #vectorizer = pickle.load(f)
-    #f.close()
-
-    ## then load tf-idf of dataset
-    #f = open("logistic_classfier.pickle", 'rb')
-    #classifier = pickle.load(f)
-    #f.close()
-
-
 
     f = open("logistic_complain_vectorizer.pickle", 'rb')
     vectorizer = pickle.load(f)
@@ -93,46 +73,38 @@ def validation():
     f.close()
 
 
-    df = pd.read_csv('validation.csv',header=None)
+    df = pd.read_csv('train.csv',header=None)
     final_result = []
+    train, test = train_test_split(df, test_size=0.2)
 
     i = 0 
     try:
         
-        for index, row in df.iterrows():
+        for index, row in test[:10000].iterrows():
             try:
 
-                text = row[2]
-                result = row[3]
+                text    =    row[1]
+                result  =    row[2]
 
                 X_test = vectorizer.transform( [text] )
                 sentiment = classifier.predict(X_test)
 
-                sentiment_answer=""
-                complain_answer=""
-            
                 sentiment_answer = str(sentiment[0]) 
 
-                
                 if sentiment_answer == str(result):
                         final_result.append(1)
                 else:
                         final_result.append(0)
     
-
             except:
                 aaa=465
     
             i += 1
     except:
-       #f = open("data_etislat_classify_new.pickle", 'wb')
-       #pickle.dump(data, f)
-       #f.close()  
        aa=654
 
-    
     aa=654
-    return  final_result
+    return  float(final_result.count(1)) / float(10000)
 
 
 #-------------------run----------------------------#
@@ -201,7 +173,7 @@ def test():
 print "training"
 train()
 print "training done"
-test()
+r=validation()
 print r
 
 
