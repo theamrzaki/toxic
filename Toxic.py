@@ -40,7 +40,11 @@ def train():
     #classifier_toxic = LogisticRegression(solver ='lbfgs')
     #classifier_toxic.fit(X_train, y_toxic)
 
-    classifier_toxic = OneVsOneClassifier(LinearSVC())
+#    classifier_toxic = OneVsOneClassifier(LinearSVC(C=1.0, class_weight=None, dual=True, fit_intercept=True,
+#intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+#random_state=None, tol=0.0001, verbose=0))
+
+    classifier_toxic = LogisticRegression(random_state=0, multi_class='ovr')
     classifier_toxic.fit(X_train, y_toxic)
 
     f = open("logistic_complain_vectorizer.pickle", 'wb')
@@ -76,7 +80,7 @@ def validation():
     df = pd.read_csv('train.csv',header=None)
     final_result = []
     train, test = train_test_split(df, test_size=0.2)
-
+    sentiment_number = 0
     i = 0 
     try:
         
@@ -87,7 +91,10 @@ def validation():
                 result  =    row[2]
 
                 X_test = vectorizer.transform( [text] )
+
                 sentiment = classifier.predict(X_test)
+                sentiment_number = classifier.predict_proba(X_test)
+                print   sentiment_number
 
                 sentiment_answer = str(sentiment[0]) 
 
@@ -174,6 +181,10 @@ print "training"
 train()
 print "training done"
 r=validation()
+print
+print
+print  "result is "
+print
 print r
 
 
